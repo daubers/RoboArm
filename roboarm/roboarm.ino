@@ -12,7 +12,7 @@ int min_position[NUM_SERVOS];
 int up_position[NUM_SERVOS];
 
 int bytes_read = 0;
-byte in[6];
+byte in[10];
 
 void setup() {
   Serial.begin(9600);
@@ -75,11 +75,7 @@ void set_start_pos(){
 }
 
 void move_servo(int servo, int pos){
-  Serial.println(pos);
-    Serial.println(min_position[servo]);
-    Serial.println(max_position[servo]);
    if (pos > min_position[servo] && pos < max_position[servo]){
-     Serial.println(pos);
      currentPosition[servo] = pos;
      pwm.setPWM(servo, 0, (uint16_t) pos);
    }
@@ -89,9 +85,15 @@ void set_servo_max(int servo, int max_pos){
   if (servo <= NUM_SERVOS){
     int pos = servo*6;
     EEPROMWriteInt(pos+3, max_pos);
-    if (currentPosition[servo] > max_pos){
-      move_servo(servo, pos);
-    }
+    max_position[servo] = max_pos;
+  }
+}
+
+void set_servo_min(int servo, int min_pos){
+  if (servo <= NUM_SERVOS){
+    int pos = servo*6;
+    EEPROMWriteInt(pos+1, min_pos);
+    min_position[servo] = min_pos;
   }
 }
 
@@ -124,7 +126,7 @@ void loop(){
         // say what you got:
         process_command(in);
         bytes_read = 0;
-        for (int i=0; i<=6; i++){
+        for (int i=0; i<=10; i++){
           in[i] = 0x0;
         }
       }
@@ -136,13 +138,51 @@ void loop(){
 }
 
 void process_command(byte* bytes){
-  int servo = bytes[0]-48;
-  int pos = (((bytes[2]-48)*100)+((bytes[3]-48)*10)+(bytes[4]-48));
-  Serial.print("Servo: ");
-  Serial.print(servo);
-  Serial.print("\n");
-  Serial.print("Position: ");
-  Serial.print(pos);
-  Serial.print("\n"); 
-  move_servo(servo,pos);
+  int command = bytes[0]-48;
+  if (command == 0){
+    int servo = bytes[2]-48;
+    int pos = (((bytes[4]-48)*100)+((bytes[5]-48)*10)+(bytes[6]-48));
+    Serial.print("Servo: ");
+    Serial.print(servo);
+    Serial.print("\n");
+    Serial.print("Position: ");
+    Serial.print(pos);
+    Serial.print("\n"); 
+    move_servo(servo,pos);
+  }
+  else if (command==1){
+    int servo = bytes[2]-48;
+    int max_pos = (((bytes[4]-48)*100)+((bytes[5]-48)*10)+(bytes[6]-48));
+    set_servo_max(servo, max_pos);
+    Serial.print("Maximum Position for servo ");
+    Serial.print(servo);
+    Serial.print(" set to ");
+    Serial.print(max_pos);
+    Serial.println();
+  }
+  else if (command==2){
+    int servo = bytes[2]-48;
+    int min_pos = (((bytes[4]-48)*100)+((bytes[5]-48)*10)+(bytes[6]-48));
+    set_servo_min(servo, min_pos);
+    Serial.print("Minimum Position for servo ");
+    Serial.print(servo);
+    Serial.print(" set to ");
+    Serial.print(min_pos);
+    Serial.println();
+  }
+  else if (command==3){
+    Serial.println("Servo,Current Position,Minimum Position,Maximum Position,Up Position");
+    for (int i=0; i<NUM_SERVOS; i++){
+      Serial.print(i);
+      Serial.print(",");
+      Serial.print(currentPosition[i]);
+      Serial.print(",");
+      Serial.print(min_position[i]);
+      Serial.print(",");
+      Serial.print(max_position[i]);
+      Serial.print(",");
+      Serial.print(up_position[i]);
+      Serial.println();
+    }
+  }
 }
