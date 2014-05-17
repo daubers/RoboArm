@@ -185,4 +185,12 @@ void process_command(byte* bytes){
       Serial.println();
     }
   }
+  else if (command==4){
+    //We want a machine readable response from these, so responses are in the form
+    //subcommand (1byte) length(2bytes) data (length-3 bytes)
+    int subcommand = bytes[1]-48;
+    if (subcommand==1) {
+      //get
+    }
+  }
 }
