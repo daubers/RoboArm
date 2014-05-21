@@ -6,15 +6,15 @@ package com.gibbet.roboarm.control;
 public class armtest {
     public static void main(String args[]){
         try {
-            System.err.println("Yaboo");
             Arm arm = new Arm();
-            //Thread.sleep(30000);
             while (!arm.ready){
                 Thread.sleep(1000);
             }
             arm.writeToArduino("41;");
             Thread.sleep(10000);
-            //System.err.println("Yaboo");
+            arm.writeToArduino("0,0,200;");
+            arm.writeToArduino("41;");
+            Thread.sleep(10000);
             arm.close();
         }
         catch (Exception e){

@@ -21,7 +21,7 @@ public class Arm implements SerialPortEventListener{
     public static SerialPort serial_port;
     public static InputStream input;
     public static OutputStream output;
-    private ArrayList<Servo> servos;
+    private Servo[] servos = new Servo[5];
     public boolean ready = false;
     public String outdata;
 
@@ -46,6 +46,7 @@ public class Arm implements SerialPortEventListener{
         init(serialport);
         serial_port.addEventListener((SerialPortEventListener) this);
         serial_port.notifyOnDataAvailable(true);
+
         //wait for rxtx to work away
         Thread.sleep(3000);
     }
@@ -74,10 +75,18 @@ public class Arm implements SerialPortEventListener{
                     if (this.outdata.startsWith("1")){
                         //This is the current settings for each of the servos!
                         //update our internal mappings to make stuff be happy
-                        //System.err.print(data);
-                        chunk = ArrayUtils.remove(chunk, 0);
-                        String ourdata = new String(chunk);
-                        System.err.print(this.outdata);
+                        this.outdata = this.outdata.substring(1,this.outdata.length()-2);
+                        String[] lines = this.outdata.split("\t");
+                        for (String line: lines){
+                            String[] thisData = line.split(",");
+                            if (this.servos[Integer.valueOf(thisData[0])] == null){
+                                this.servos[Integer.valueOf(thisData[0])] = new Servo();
+                            }
+                            this.servos[Integer.valueOf(thisData[0])].setPosition(Integer.valueOf(thisData[1]));
+                            this.servos[Integer.valueOf(thisData[0])].setMin(Integer.valueOf(thisData[2]));
+                            this.servos[Integer.valueOf(thisData[0])].setMax(Integer.valueOf(thisData[3]));
+                            this.servos[Integer.valueOf(thisData[0])].setUpright(Integer.valueOf(thisData[4]));
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -96,7 +105,6 @@ public class Arm implements SerialPortEventListener{
             System.err.println(port.getName());
             if (port.getPortType() == CommPortIdentifier.PORT_SERIAL) {
                 ports.add(port);
-                System.err.println(port.getName());
             }
         }
         return ports;
