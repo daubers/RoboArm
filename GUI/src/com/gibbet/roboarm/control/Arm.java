@@ -13,6 +13,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import org.apache.commons.lang3.ArrayUtils;
+import com.gibbet.roboarm.control.Servo;
 
 public class Arm implements SerialPortEventListener{
 
@@ -20,6 +22,8 @@ public class Arm implements SerialPortEventListener{
     public static InputStream input;
     public static OutputStream output;
     private ArrayList<Servo> servos;
+    public boolean ready = false;
+    public String outdata;
 
     public void refreshServoPositions(){
         try {
@@ -43,7 +47,7 @@ public class Arm implements SerialPortEventListener{
         serial_port.addEventListener((SerialPortEventListener) this);
         serial_port.notifyOnDataAvailable(true);
         //wait for rxtx to work away
-        Thread.sleep(1500);
+        Thread.sleep(3000);
     }
 
     @Override
@@ -55,11 +59,26 @@ public class Arm implements SerialPortEventListener{
                 byte chunk[] = new byte[available];
                 input.read(chunk, 0, available);
                 String data = new String(chunk);
-                System.out.print(data);
-                if (data.endsWith("\n")){
+                this.outdata = this.outdata + data;
+                //System.out.print(data);
+                if (data.contains("ready")){
+                    this.ready = true;
+                    this.outdata = "";
+                }
+                //System.out.println(data.substring(Math.max(data.length() - 2, 0)));
+                if (this.outdata.endsWith("tt")){
                     //We have a complete data line to process
                     //How are we going to process these... state machine or add a shadowed
                     //command form on the arduino side to deal with machine commands?
+                    //the first byte is the command that was called
+                    if (this.outdata.startsWith("1")){
+                        //This is the current settings for each of the servos!
+                        //update our internal mappings to make stuff be happy
+                        //System.err.print(data);
+                        chunk = ArrayUtils.remove(chunk, 0);
+                        String ourdata = new String(chunk);
+                        System.err.print(this.outdata);
+                    }
                 }
             } catch (Exception e) {
                 System.err.println(e.toString());
@@ -72,11 +91,12 @@ public class Arm implements SerialPortEventListener{
         ArrayList<CommPortIdentifier> ports = new ArrayList<CommPortIdentifier>();
         CommPortIdentifier port;
         Enumeration portList = CommPortIdentifier.getPortIdentifiers();
-        System.out.println("Get List");
         while (portList.hasMoreElements()) {
             port = (CommPortIdentifier) portList.nextElement();
+            System.err.println(port.getName());
             if (port.getPortType() == CommPortIdentifier.PORT_SERIAL) {
                 ports.add(port);
+                System.err.println(port.getName());
             }
         }
         return ports;
@@ -89,11 +109,13 @@ public class Arm implements SerialPortEventListener{
     public static void init(String serialport) throws Exception {
 
         CommPortIdentifier portId = null;
+
         if (serialport == null) {
             ArrayList<CommPortIdentifier> ports = getSerialPorts();
             if (ports.isEmpty()) {
-                portId = CommPortIdentifier.getPortIdentifier("ttyUSB0"); //linux FTDI for now
+                portId = CommPortIdentifier.getPortIdentifier("/dev/ttyACM0"); //linux FTDI for now
             } else {
+
                 portId = ports.get(0); //grab the first one.
             }
 

@@ -187,10 +187,24 @@ void process_command(byte* bytes){
   }
   else if (command==4){
     //We want a machine readable response from these, so responses are in the form
-    //subcommand (1byte) length(2bytes) data (length-3 bytes)
+    //subcommand (1byte) data tt (end of data)
     int subcommand = bytes[1]-48;
     if (subcommand==1) {
-      //get
+      //get current positions
+      Serial.print(1);
+      for (int i=0; i<NUM_SERVOS; i++){
+        Serial.print(i);
+        Serial.print(",");
+        Serial.print(currentPosition[i]);
+        Serial.print(",");
+        Serial.print(min_position[i]);
+        Serial.print(",");
+        Serial.print(max_position[i]);
+        Serial.print(",");
+        Serial.print(up_position[i]);
+        Serial.println();
+      }
+      Serial.print("tt");
     }
   }
 }

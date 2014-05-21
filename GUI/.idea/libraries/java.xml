@@ -2,9 +2,11 @@
   <library name="java">
     <CLASSES>
       <root url="file:///usr/share/java" />
+      <root url="file://$PROJECT_DIR$/lib" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/lib" recursive="false" />
     <jarDirectory url="file:///usr/share/java" recursive="false" />
   </library>
 </component>
