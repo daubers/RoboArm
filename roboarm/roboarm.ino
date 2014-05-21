@@ -27,6 +27,7 @@ void setup() {
   init_data();
   //set the arm upright, we'll need the servo positions for this from the eeprom
   set_start_pos();
+  Serial.println("ready");
 }
 
 boolean is_eeprom_ready(){
@@ -122,6 +123,7 @@ void loop(){
     if (Serial.available() > 0) {
       // read the incoming byte:
       byte incomingByte = Serial.read();
+      //Serial.print(incomingByte);
       if (incomingByte == ';'){
         // say what you got:
         process_command(in);
@@ -191,7 +193,7 @@ void process_command(byte* bytes){
     int subcommand = bytes[1]-48;
     if (subcommand==1) {
       //get current positions
-      Serial.print(1);
+      Serial.print("1");
       for (int i=0; i<NUM_SERVOS; i++){
         Serial.print(i);
         Serial.print(",");
@@ -202,7 +204,7 @@ void process_command(byte* bytes){
         Serial.print(max_position[i]);
         Serial.print(",");
         Serial.print(up_position[i]);
-        Serial.println();
+        Serial.print("\t");
       }
       Serial.print("tt");
     }
